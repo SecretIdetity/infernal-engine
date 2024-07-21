@@ -35,15 +35,22 @@ pub fn build(f: PathBuf, d: &String, dest: &String) {
     }
     println!("c{}", aaa);
     println!("d{}", r);
-    for (ia, ib) in aaa.to_owned().chars().enumerate() {
-        if ib == '$'
-            && aaa[ia..].find(|i: char| i.is_whitespace()).unwrap_or(ia)
-                < aaa[ia..].find("(").unwrap_or(aaa.len())
-        {
-            aaa = aaa[..ia].to_owned()
-                + &aaa[ia..]
-                    .replacen(|i: char| i.is_whitespace(), "(", 1)
-                    .replacen("\n", ")", 1);
+    while aaa.contains("$$") {
+        aaa = aaa.replace("$$", "$ $");
+    }
+    {
+        let mut i = 0;
+        for (ia, ib) in aaa.to_owned().chars().enumerate() {
+            if ib == '$'
+                && aaa[ia + i..].find(|i: char| i.is_whitespace()).unwrap_or(ia + i)
+                    < aaa[ia + i..].find("(").unwrap_or(aaa.len() + i)
+            {
+                aaa = aaa[..ia + i].to_owned()
+                    + &aaa[ia + i..]
+                        .replacen(|i: char| i.is_whitespace(), "(", 1)
+                        .replacen("\n", ")\n", 1);
+                    i += 1;
+            }
         }
     }
     aaa = aaa.replace("\n", "");
@@ -160,8 +167,7 @@ fn clean(content: String) -> String {
     a = result.find("#");
     while a.is_some() {
         let c = {
-            let b
-             = result[a.unwrap()..].find("\n").map(|i| i + a.unwrap());
+            let b = result[a.unwrap()..].find("\n").map(|i| i + a.unwrap());
             if b.is_some() {
                 b.unwrap()
             } else {
