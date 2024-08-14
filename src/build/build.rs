@@ -4,7 +4,7 @@ use crate::build::valid;
 
 pub fn build(f: PathBuf, d: &String, dest: &String) {
     let content = fs::read_to_string(&f).expect("error reading content");
-    let mut aaa = clean(content);
+    let mut aaa = clean(content) + "\n";
     if !valid::validate(&aaa) {
         return; //todo invalid
     }
