@@ -1,3 +1,4 @@
+use core::time;
 use std::{fs, path::PathBuf};
 
 use crate::build::valid;
@@ -8,14 +9,20 @@ pub fn build(f: PathBuf, d: &String, dest: &String) {
     if !valid::validate(&aaa) {
         return; //todo invalid
     }
+    let e;
     let mut r = {
         let a = ..aaa.find(|c: char| c.is_whitespace() || c == '\n').unwrap();
+        if aaa[a] == "".to_owned() {
+            println!("no template given, skipping");
+            return;
+        }
+        e = if aaa[a].find(".").is_some() {aaa.get(a).unwrap()[(&aaa[a]).rfind(".").unwrap() + 1..].to_string()} else {aaa[a].to_string()} ;
         let b = fs::read_to_string(d.to_owned() + "/" + &aaa[a]).unwrap_or("".to_owned());
         aaa.replace_range(a, "");
         b
     };
-    println!("a{}", aaa);
-    println!("b{}", r);
+    println!("a{}a", aaa);
+    println!("b{}b", r);
     if r == "" {
         println!("template not found, skipping");
         return;
@@ -29,12 +36,12 @@ pub fn build(f: PathBuf, d: &String, dest: &String) {
             .unwrap_or(aaa.len());
         println!("{}", &aaa[a.unwrap() + 2..c]);
         let b = fs::read_to_string(d.to_owned() + "/" + &aaa[a.unwrap() + 2..c])
-            .expect("included files does not exist");
+            .expect("included file does not exist");
         aaa.replace_range(a.unwrap()..c, &clean(b));
         a = aaa.find("$/");
     }
-    println!("c{}", aaa);
-    println!("d{}", r);
+    println!("c{}c", aaa);
+    println!("d{}d", r);
     while aaa.contains("$$") {
         aaa = aaa.replace("$$", "$ $");
     }
@@ -65,8 +72,8 @@ pub fn build(f: PathBuf, d: &String, dest: &String) {
         r = r.replace("  ", " "); //yes
         a = r.find("  ");
     }
-    println!("e{}", aaa);
-    println!("f{}", r);
+    println!("e{}e", aaa);
+    println!("f{}f", r);
     let mut rr = combine(&r, &aaa)
         .replace("&num;", "#")
         .replace("&dollar;", "$")
@@ -75,13 +82,14 @@ pub fn build(f: PathBuf, d: &String, dest: &String) {
     while rr.contains("> ") {
         rr = rr.replace("> ", ">");
     }
-    println!("g{}", rr);
+    println!("g{}g", rr);
+    println!("h{}h", e);
     fs::write(
         rl(&f
             .to_str()
             .expect("how did you even get here")
             .replacen(d, dest, 1))
-            + "html",
+            + &e,
         rr,
     )
     .expect("error writing file");
